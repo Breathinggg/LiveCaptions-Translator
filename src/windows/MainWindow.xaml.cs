@@ -4,6 +4,7 @@ using System.Windows;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
+using LiveCaptionsTranslator.audio;
 using LiveCaptionsTranslator.utils;
 using LiveCaptionsTranslator.Utils;
 using Button = Wpf.Ui.Controls.Button;
@@ -27,6 +28,17 @@ namespace LiveCaptionsTranslator
                 IsAutoHeight = true;
                 CheckForFirstUse();
                 CheckForUpdates();
+
+                // Posted, not invoked: these fire from worker threads that the UI thread may be
+                // waiting on, and a synchronous marshal would deadlock the pair.
+                WindowAudioIsolator.StateChanged += () => Dispatcher.BeginInvoke(UpdateWindowIsolationButton);
+                WindowAudioIsolator.Failed += message => Dispatcher.BeginInvoke(() =>
+                {
+                    SnackbarHost.Show("Window isolation stopped", message,
+                        SnackbarType.Warning, timeout: 5, closeButton: true);
+                    UpdateWindowIsolationButton();
+                });
+                UpdateWindowIsolationButton();
             };
 
             double screenWidth = SystemParameters.PrimaryScreenWidth;
@@ -101,6 +113,35 @@ namespace LiveCaptionsTranslator
                 OverlayWindow.Close();
                 OverlayWindow = null;
             }
+        }
+
+        private void WindowIsolationButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var picker = new SourcePickerWindow { Owner = this };
+                picker.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                // Enumerating windows and audio endpoints touches a lot of other processes;
+                // one uncooperative one must not take the whole app down.
+                CrashLogger.Write("SourcePickerWindow", ex);
+                SnackbarHost.Show("[ERROR] Could not open the window picker", ex.Message,
+                    SnackbarType.Error, timeout: 6, closeButton: true);
+            }
+            UpdateWindowIsolationButton();
+        }
+
+        /// <summary>Fills the toolbar icon while a single window is being translated.</summary>
+        public void UpdateWindowIsolationButton()
+        {
+            if (WindowIsolationButton.Icon is SymbolIcon icon)
+                icon.Filled = WindowAudioIsolator.IsActive;
+
+            WindowIsolationButton.ToolTip = WindowAudioIsolator.IsActive
+                ? $"Only translating: {WindowAudioIsolator.Target?.DisplayName}"
+                : "Translate a Single Window";
         }
 
         private void LogOnlyButton_Click(object sender, RoutedEventArgs e)

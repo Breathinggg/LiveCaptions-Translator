@@ -48,6 +48,14 @@
                             ToolTip="Log Cards of Captions"
                             Visibility="Collapsed" />
                         <ui:Button
+                            x:Name="WindowIsolationButton"
+                            Margin="0,0,5,0"
+                            Appearance="Transparent"
+                            Click="WindowIsolationButton_Click"
+                            Icon="{ui:SymbolIcon Window16,
+                                                 Filled=False}"
+                            ToolTip="Translate a Single Window" />
+                        <ui:Button
                             x:Name="LogOnlyButton"
                             Margin="0,0,5,0"
                             Appearance="Transparent"

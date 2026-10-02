@@ -1,0 +1,179 @@
+<ui:FluentWindow
+    x:Class="LiveCaptionsTranslator.SourcePickerWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="Translate a Single Window"
+    Width="640"
+    Height="600"
+    MinWidth="520"
+    MinHeight="480"
+    Background="Transparent"
+    ExtendsContentIntoTitleBar="True"
+    ResizeMode="CanResize"
+    WindowBackdropType="Mica"
+    WindowStartupLocation="CenterOwner"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <!-- Declared before the template that uses it: StaticResource cannot look forward. -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <DataTemplate x:Key="SourceTemplate">
+            <Grid Margin="2,5,2,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Image
+                    Grid.Column="0"
+                    Width="20"
+                    Height="20"
+                    Margin="0,0,10,0"
+                    VerticalAlignment="Center"
+                    RenderOptions.BitmapScalingMode="HighQuality"
+                    Source="{Binding Icon}" />
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="13"
+                        Text="{Binding DisplayName}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        FontSize="11"
+                        Opacity="0.6"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <ProgressBar
+                    Grid.Column="2"
+                    Width="60"
+                    Height="4"
+                    Margin="10,0,4,0"
+                    VerticalAlignment="Center"
+                    Maximum="100"
+                    Value="{Binding PeakPercent, Mode=OneWay}"
+                    Visibility="{Binding IsSession, Converter={StaticResource BoolToVisibility}}" />
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar
+            Grid.Row="0"
+            Height="32"
+            ShowMaximize="False">
+            <ui:TitleBar.Header>
+                <TextBlock
+                    Padding="15,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="Translate a Single Window" />
+            </ui:TitleBar.Header>
+        </ui:TitleBar>
+
+        <StackPanel Grid.Row="1" Margin="16,4,16,0">
+            <TextBlock
+                Margin="0,0,0,10"
+                Opacity="0.75"
+                TextWrapping="Wrap">
+                Live Captions has no audio source setting of its own, so it normally transcribes
+                everything playing on this PC. Pick one window or process below and its audio will
+                be copied to a separate output device that only Live Captions listens to. What you
+                hear does not change.
+            </TextBlock>
+
+            <TextBlock
+                Margin="0,0,0,4"
+                FontWeight="SemiBold"
+                Text="Isolation device" />
+            <ComboBox
+                x:Name="EndpointComboBox"
+                Margin="0,0,0,2"
+                DisplayMemberPath="Name"
+                SelectionChanged="EndpointComboBox_SelectionChanged" />
+            <TextBlock
+                x:Name="EndpointHint"
+                Margin="2,4,0,10"
+                FontSize="11"
+                Opacity="0.6"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <TabControl
+            x:Name="SourceTabs"
+            Grid.Row="2"
+            Margin="16,0,16,0"
+            Background="Transparent"
+            BorderThickness="0">
+            <TabItem Header="Windows">
+                <ListBox
+                    x:Name="WindowList"
+                    Margin="0,8,0,0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    HorizontalContentAlignment="Stretch"
+                    ItemTemplate="{StaticResource SourceTemplate}"
+                    MouseDoubleClick="SourceList_MouseDoubleClick"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+            </TabItem>
+            <TabItem Header="Playing audio">
+                <ListBox
+                    x:Name="SessionList"
+                    Margin="0,8,0,0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    HorizontalContentAlignment="Stretch"
+                    ItemTemplate="{StaticResource SourceTemplate}"
+                    MouseDoubleClick="SourceList_MouseDoubleClick"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+            </TabItem>
+        </TabControl>
+
+        <Grid Grid.Row="3" Margin="16,12,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                x:Name="StatusText"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                FontSize="11"
+                Opacity="0.7"
+                TextTrimming="CharacterEllipsis"
+                TextWrapping="NoWrap" />
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <ui:Button
+                    Margin="0,0,8,0"
+                    Click="RefreshButton_Click"
+                    Content="Refresh"
+                    Icon="{ui:SymbolIcon ArrowClockwise16}" />
+                <ui:Button
+                    x:Name="StopButton"
+                    Margin="0,0,8,0"
+                    Click="StopButton_Click"
+                    Content="Stop isolation" />
+                <ui:Button
+                    x:Name="StartButton"
+                    Appearance="Primary"
+                    Click="StartButton_Click"
+                    Content="Translate this" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

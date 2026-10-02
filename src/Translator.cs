@@ -29,6 +29,13 @@ namespace LiveCaptionsTranslator
         public static bool LogOnlyFlag { get; set; } = false;
         public static bool FirstUseFlag { get; set; } = false;
 
+        /// <summary>
+        /// Stops the loops below from resurrecting LiveCaptions while the app is closing.
+        /// Without it, shutdown kills LiveCaptions and <see cref="TranslateLoop"/> immediately
+        /// launches it again, outliving the app that owns it.
+        /// </summary>
+        public static volatile bool IsShuttingDown = false;
+
         public static event Action? TranslationLogged;
 
         static Translator()
@@ -49,7 +56,7 @@ namespace LiveCaptionsTranslator
             int idleCount = 0;
             int syncCount = 0;
 
-            while (true)
+            while (!IsShuttingDown)
             {
                 if (Window == null)
                 {
@@ -159,11 +166,13 @@ namespace LiveCaptionsTranslator
 
         public static async Task TranslateLoop()
         {
-            while (true)
+            while (!IsShuttingDown)
             {
                 // Check LiveCaptions.exe still alive
                 if (Window == null)
                 {
+                    if (IsShuttingDown)
+                        return;
                     Caption.DisplayTranslatedCaption = "[WARNING] LiveCaptions was unexpectedly closed, restarting...";
                     Window = LiveCaptionsHandler.LaunchLiveCaptions();
                     Caption.DisplayTranslatedCaption = "";
@@ -192,7 +201,7 @@ namespace LiveCaptionsTranslator
 
         public static async Task DisplayLoop()
         {
-            while (true)
+            while (!IsShuttingDown)
             {
                 var (translatedText, isChoke) = translationTaskQueue.Output;
 

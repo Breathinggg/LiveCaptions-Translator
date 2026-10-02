@@ -26,6 +26,9 @@ namespace LiveCaptionsTranslator.models
         private string prompt;
         private string? ignoredUpdateVersion;
 
+        private string isolationEndpointId = string.Empty;
+        private string isolationTargetProcess = string.Empty;
+
         private MainWindowState mainWindowState;
         private OverlayWindowState overlayWindowState;
         private Dictionary<string, string> windowBounds;
@@ -105,6 +108,30 @@ namespace LiveCaptionsTranslator.models
             {
                 ignoredUpdateVersion = value;
                 OnPropertyChanged("IgnoredUpdateVersion");
+            }
+        }
+
+        /// <summary>
+        /// Render endpoint Live Captions gets pinned to while a single window is being
+        /// translated. Must not be the system default, or every other application mixes in.
+        /// </summary>
+        public string IsolationEndpointId
+        {
+            get => isolationEndpointId;
+            set
+            {
+                isolationEndpointId = value;
+                OnPropertyChanged("IsolationEndpointId");
+            }
+        }
+        /// <summary>Last captured process, remembered only to preselect it in the picker.</summary>
+        public string IsolationTargetProcess
+        {
+            get => isolationTargetProcess;
+            set
+            {
+                isolationTargetProcess = value;
+                OnPropertyChanged("IsolationTargetProcess");
             }
         }
 

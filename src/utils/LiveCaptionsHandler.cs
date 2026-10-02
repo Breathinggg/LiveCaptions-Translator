@@ -11,24 +11,42 @@ namespace LiveCaptionsTranslator.utils
 
         private static AutomationElement? captionsTextBlock = null;
 
+        private static readonly TimeSpan LAUNCH_TIMEOUT = TimeSpan.FromSeconds(20);
+        private const string WINDOW_CLASS = "LiveCaptionsDesktopWindow";
+
         public static AutomationElement LaunchLiveCaptions()
         {
-            // Init
             KillAllProcessesByPName(PROCESS_NAME);
-            var process = Process.Start(PROCESS_NAME);
+            captionsTextBlock = null;
 
-            // Search for window
-            AutomationElement? window = null;
-            for (int attemptCount = 0;
-                 window == null || window.Current.ClassName.CompareTo("LiveCaptionsDesktopWindow") != 0;
-                 attemptCount++)
+            Process.Start(PROCESS_NAME);
+
+            // Every LiveCaptions process is checked, not just the one Process.Start handed back:
+            // that first process often exits immediately and the real window belongs to another
+            // one. Watching only the original pid means the search can never succeed, and a
+            // spin without a delay burns through its attempts as a multi-second freeze.
+            var stopwatch = Stopwatch.StartNew();
+            while (stopwatch.Elapsed < LAUNCH_TIMEOUT)
             {
-                window = FindWindowByPId(process.Id);
-                if (attemptCount > 10000)
-                    throw new Exception("Failed to launch LiveCaptions!");
+                foreach (Process process in Process.GetProcessesByName(PROCESS_NAME))
+                {
+                    AutomationElement? window = FindWindowByPId(process.Id);
+                    if (window == null)
+                        continue;
+                    try
+                    {
+                        if (window.Current.ClassName == WINDOW_CLASS)
+                            return window;
+                    }
+                    catch (ElementNotAvailableException)
+                    {
+                        // The window died between the lookup and the property read.
+                    }
+                }
+                Thread.Sleep(150);
             }
 
-            return window;
+            throw new Exception("Failed to launch LiveCaptions!");
         }
 
         public static void KillLiveCaptions(AutomationElement window)
@@ -155,6 +173,16 @@ namespace LiveCaptionsTranslator.utils
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Closes every LiveCaptions instance without needing a window handle. Shutdown cannot
+        /// rely on the cached one: it is cleared whenever the automation element goes away, so
+        /// a restart in between leaves the app unable to clean up the process it started.
+        /// </summary>
+        public static void KillAllLiveCaptions()
+        {
+            KillAllProcessesByPName(PROCESS_NAME);
         }
 
         private static void KillAllProcessesByPName(string processName)

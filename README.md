@@ -53,6 +53,24 @@ Windows' built-in LiveCaptions is easy to use, uses few resources, and has extre
   By enabling the ***Include microphone audio*** option in the setting of Windows LiveCaptions, you can achieve real-time speech translation!
   > ⚠️ **IMPORTANT:** You must change the source language in Windows LiveCaptions!
 
+- **🎯 Single Window Translation**
+
+  Translate one application instead of everything playing on the PC. Useful when several sound
+  sources are open at once and their speech would otherwise be mixed into the same captions.
+
+  Click the window button in the title bar, pick a window or a process that is currently playing
+  audio, and only that one is translated from then on.
+
+  How it works: Windows Live Captions has no audio source setting and always listens to the
+  default playback device. So the selected process is captured on its own with WASAPI process
+  loopback — the same facility OBS uses for its application audio capture — and that copy is fed
+  to a second output device that only Live Captions listens to. The application itself is never
+  rerouted, so what you hear does not change and no extra latency is introduced.
+
+  > ⚠️ **Requires a spare playback device** to isolate the audio into: an unused HDMI or S/PDIF
+  > output works, and a virtual audio cable is ideal because it is silent. It cannot be the
+  > system default device, since every other application plays into that one as well.
+
 - **🎨 Modern Interface**
 
   Easy-to-use and clean Fluent UI aligned with modern Windows aesthetics.
